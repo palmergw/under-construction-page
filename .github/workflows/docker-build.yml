@@ -1,0 +1,40 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+env:
+  IMAGE_NAME: ghcr.io/${{ github.repository }}  # e.g. use GitHub Container Registry
+  # Alternatively set IMAGE_NAME to your Docker Hub repo, e.g. username/under-construction-page
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to registry
+        # If pushing to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAME }}:latest
+            ${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+      # Optionally, add a step to verify or output info
+      #- name: Image digest
+      #  run: echo "Built image ${{ env.IMAGE_NAME }}:${{ github.sha }}"
